@@ -19,7 +19,7 @@ game.state.add('play', {
   		this.game.load.image('spider', 'assets/allacrost_enemy_sprites/spider.png');
   		this.game.load.image('stygian_lizard', 'assets/allacrost_enemy_sprites/stygian_lizard.png');
 
-
+      this.game.load.image('gold_coin', 'assets/496_RPG_icons/I_GoldCoin.png');
   		this.game.load.image('forest', 'assets/Background/Forrest.png');
   	},
     create: function() {
@@ -29,6 +29,37 @@ game.state.add('play', {
 		var bg = state.game.add.tileSprite(0, 0, state.game.world.width,
 		    state.game.world.height, 'forest');
 		//bg.tileScale.setTo(4,4);
+
+
+    this.dmgTextPool = this.add.group();
+    var dmgText;
+    for (var d=0; d<50; d++) {
+        dmgText = this.add.text(0, 0, '1', {
+            font: '64px Arial Black',
+            fill: '#fff',
+            strokeThickness: 4
+        });
+        // start out not existing, so we don't draw it yet
+        dmgText.exists = false;
+        dmgText.tween = game.add.tween(dmgText)
+            .to({
+                alpha: 0,
+                y: 100,
+                x: this.game.rnd.integerInRange(100, 700)
+            }, 2000, Phaser.Easing.Cubic.Out);
+
+        dmgText.tween.onComplete.add(function(text, tween) {
+            text.kill();
+        });
+        this.dmgTextPool.add(dmgText);
+    }
+
+    // create a pool of gold coins
+    this.coins = this.add.group();
+    this.coins.createMultiple(50, 'gold_coin', '', false);
+    this.coins.setAll('inputEnabled', true);
+    this.coins.setAll('goldValue', 1);
+    this.coins.callAll('events.onInputDown.add', 'events.onInputDown', this.onClickCoin, this);
 
     var monsterData = [
         {name: 'Aerocephal',        image: 'aerocephal',        maxHealth: 10},
@@ -55,6 +86,12 @@ game.state.add('play', {
         gold: 0
     };
 
+
+    this.playerGoldText = this.add.text(30, 30, 'Gold: ' + this.player.gold, {
+        font: '24px Arial Black',
+        fill: '#fff',
+        strokeThickness: 4
+    });
 		this.monsters = this.game.add.group();
 
 		var monster;
@@ -104,6 +141,14 @@ game.state.add('play', {
     // apply click damage to monster
     this.currentMonster.damage(this.player.clickDmg);
     this.monsterHealthText.text = this.currentMonster.alive ? this.currentMonster.health + ' HP' : 'DEAD';
+
+    var dmgText = this.dmgTextPool.getFirstExists(false);
+      if (dmgText) {
+        dmgText.text = this.player.clickDmg;
+        dmgText.reset(pointer.positionDown.x, pointer.positionDown.y);
+        dmgText.alpha = 1;
+        dmgText.tween.start();
+      }
 	},
 
   onKilledMonster: function(monster) {
@@ -114,13 +159,36 @@ game.state.add('play', {
     this.currentMonster = this.monsters.getRandom();
     // make sure they are fully healed
     this.currentMonster.revive(this.currentMonster.maxHealth);
+
+    var coin;
+    // spawn a coin on the ground
+    coin = this.coins.getFirstExists(false);
+    coin.reset(this.game.world.centerX + this.game.rnd.integerInRange(-100, 100), this.game.world.centerY);
+    coin.goldValue = 1;
+    this.game.time.events.add(Phaser.Timer.SECOND * 3, this.onClickCoin, this, coin);
+    if (!coin.alive) {
+    return;
+}
+
   },
+
+
 
   onRevivedMonster: function(monster) {
     monster.position.set(this.game.world.centerX, this.game.world.centerY);
     // update the text display
     this.monsterNameText.text = monster.details.name;
     this.monsterHealthText.text = monster.health + 'HP';
+  },
+
+
+  onClickCoin: function(coin) {
+      // give the player gold
+      this.player.gold += coin.goldValue;
+      // update UI
+      this.playerGoldText.text = 'Gold: ' + this.player.gold;
+      // remove the coin
+      coin.kill();
   }
 });
 
