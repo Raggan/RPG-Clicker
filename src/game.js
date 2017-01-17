@@ -30,25 +30,30 @@ game.state.add('play', {
 		    state.game.world.height, 'forest');
 		//bg.tileScale.setTo(4,4);
 
+    var monsterData = [
+        {name: 'Aerocephal',        image: 'aerocephal',        maxHealth: 10},
+        {name: 'Arcana Drake',      image: 'arcana_drake',      maxHealth: 20},
+        {name: 'Aurum Drakueli',    image: 'aurum-drakueli',    maxHealth: 30},
+        {name: 'Bat',               image: 'bat',               maxHealth: 5},
+        {name: 'Daemarbora',        image: 'daemarbora',        maxHealth: 10},
+        {name: 'Deceleon',          image: 'deceleon',          maxHealth: 10},
+        {name: 'Demonic Essence',   image: 'demonic_essence',   maxHealth: 15},
+        {name: 'Dune Crawler',      image: 'dune_crawler',      maxHealth: 8},
+        {name: 'Green Slime',       image: 'green_slime',       maxHealth: 3},
+        {name: 'Nagaruda',          image: 'nagaruda',          maxHealth: 13},
+        {name: 'Rat',               image: 'rat',               maxHealth: 2},
+        {name: 'Scorpion',          image: 'scorpion',          maxHealth: 2},
+        {name: 'Skeleton',          image: 'skeleton',          maxHealth: 6},
+        {name: 'Snake',             image: 'snake',             maxHealth: 4},
+        {name: 'Spider',            image: 'spider',            maxHealth: 4},
+        {name: 'Stygian Lizard',    image: 'stygian_lizard',    maxHealth: 20}
+    ];
 
-		var monsterData = [
-			{name: 'Aerocephal', image: 'aerocephal'},
-			{name: 'Arcana Drake', image: 'arcana_drake'},
-			{name: 'Aurum Drakueli', image: 'aurum-drakueli'},
-			{name: 'Bat', image: 'bat'},
-			{name: 'Daemarbora', image: 'daemarbora'},
-			{name: 'Deceleon', image: 'deceleon'},
-			{name: 'Demonic Essence', image: 'demonic_essence'},
-			{name: 'Dune Crawler', image: 'dune_crawler'},
-			{name: 'Green Slime', image: 'green_slime'},
-			{name: 'Nagaruda', image: 'nagaruda'},
-			{name: 'Rat', image: 'rat'},
-			{name: 'Scorpion', image: 'scorpion'},
-			{name: 'Skeleton', image: 'skeleton'},
-			{name: 'Snake', image: 'snake'},
-			{name: 'Spider', image: 'spider'},
-			{name: 'Stygian Lizard', image: 'stygian_lizard'}
-		];
+    // the main player
+    this.player = {
+        clickDmg: 1,
+        gold: 0
+    };
 
 		this.monsters = this.game.add.group();
 
@@ -61,6 +66,13 @@ game.state.add('play', {
 			// reference to the database
 			monster.details = data;
 
+      // use the built in health component
+      monster.health = monster.maxHealth = data.maxHealth;
+
+      // hook into health and lifecycle events
+      monster.events.onKilled.add(state.onKilledMonster, state);
+      monster.events.onRevived.add(state.onRevivedMonster, state);
+
 			//enable input so we can click it!
 			monster.inputEnabled = true;
 			monster.events.onInputDown.add(state.onClickMonster, state);
@@ -68,23 +80,48 @@ game.state.add('play', {
 
 
 		this.currentMonster = this.monsters.getRandom();
-		this.currentMonster.position.set(this.game.world.centerX + 100, this.game.world.centerY);
+		this.currentMonster.position.set(this.game.world.centerX, this.game.world.centerY);
+
+    this.monsterInfoUI = this.game.add.group();
+    this.monsterInfoUI.position.setTo(this.game.world.centerX - 150, this.game.world.centerY + 150);
+    this.monsterNameText = this.monsterInfoUI.addChild(this.game.add.text(0, 0, this.currentMonster.details.name, {
+        font: '48px Arial Black',
+        fill: '#fff',
+        strokeThickness: 4
+    }));
+    this.monsterHealthText = this.monsterInfoUI.addChild(this.game.add.text(0, 60, this.currentMonster.health + ' HP', {
+        font: '32px Arial Black',
+        fill: '#ff0000',
+        strokeThickness: 4
+    }));
 	},
     render: function() {
-      game.debug.text(this.currentMonster.details.name,
-			this.game.world.centerX - 50,
-			100);
-    },
+        },
 
 
 
-	onClickMonster: function() {
-		// reset the currentMonster before we move him
-		this.currentMonster.position.set(1000, this.game.world.centerY);
-		// now pick the next in the list, and bring him up
-		this.currentMonster = this.monsters.getRandom();
-		this.currentMonster.position.set(this.game.world.centerX + 100, this.game.world.centerY);
-	}
+	onClickMonster: function(monster,pointer) {
+    // apply click damage to monster
+    this.currentMonster.damage(this.player.clickDmg);
+    this.monsterHealthText.text = this.currentMonster.alive ? this.currentMonster.health + ' HP' : 'DEAD';
+	},
+
+  onKilledMonster: function(monster) {
+    // move the monster off screen again
+    monster.position.set(2000, this.game.world.centerY);
+
+    // pick a new monster
+    this.currentMonster = this.monsters.getRandom();
+    // make sure they are fully healed
+    this.currentMonster.revive(this.currentMonster.maxHealth);
+  },
+
+  onRevivedMonster: function(monster) {
+    monster.position.set(this.game.world.centerX, this.game.world.centerY);
+    // update the text display
+    this.monsterNameText.text = monster.details.name;
+    this.monsterHealthText.text = monster.health + 'HP';
+  }
 });
 
 game.state.start('play');
