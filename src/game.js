@@ -99,7 +99,7 @@ game.state.add('play', {
             player.clickDmg += 1;
         }},
         {icon: 'swordIcon1', name: 'Auto-Attack', level: 0, cost: 1, purchaseHandler: function(button, player) {
-            player.dps += 5;
+            player.dps += 1;
         }}
     ];
 
@@ -140,12 +140,60 @@ game.state.add('play', {
         this.dmgTextPool.add(dmgText);
     }
 
+    this.dpsTextPool = this.add.group();
+    var dpsText;
+    for (var d=0; d<50; d++) {
+        dpsText = this.add.text(0, 0, '1', {
+            font: '64px Arial Black',
+            fill: '#FF0000',
+            strokeThickness: 4
+        });
+        // start out not existing, so we don't draw it yet
+        dpsText.exists = false;
+        dpsText.tween = game.add.tween(dpsText)
+            .to({
+                alpha: 0,
+                y: 100,
+                x: this.game.rnd.integerInRange(100, 700)
+            }, 2000, Phaser.Easing.Cubic.Out);
+
+        dpsText.tween.onComplete.add(function(text, tween) {
+            text.kill();
+        });
+        this.dpsTextPool.add(dpsText);
+    }
+
+
+    this.coinValuePool = this.add.group();
+    var coinValue;
+    for (var d=0; d<50; d++) {
+        coinValue = this.add.text(0, 0, '1', {
+            font: '64px Arial Black',
+            fill: '#FFFF00',
+            strokeThickness: 4
+        });
+        // start out not existing, so we don't draw it yet
+        coinValue.exists = false;
+        coinValue.tween = game.add.tween(coinValue)
+            .to({
+                alpha: 0,
+                y: 100,
+                x: this.game.rnd.integerInRange(100, 700)
+            }, 2000, Phaser.Easing.Cubic.Out);
+
+        coinValue.tween.onComplete.add(function(text, tween) {
+            text.kill();
+        });
+        this.coinValuePool.add(coinValue);
+    }
+
     // create a pool of gold coins
     this.coins = this.add.group();
     this.coins.createMultiple(50, 'gold_coin', '', false);
     this.coins.setAll('inputEnabled', true);
     this.coins.setAll('goldValue', 1);
     this.coins.callAll('events.onInputDown.add', 'events.onInputDown', this.onClickCoin, this);
+
 
     var monsterData = [
         {name: 'Aerocephal',        image: 'aerocephal',        maxHealth: 10},
@@ -239,9 +287,20 @@ game.state.add('play', {
         if (this.player.dps > 0) {
             if (this.currentMonster && this.currentMonster.alive) {
                 var dmg = this.player.dps / 10;
+                var healthBeforeDmg = Math.round(this.currentMonster.health);
                 this.currentMonster.damage(dmg);
                 // update the health text
                 this.monsterHealthText.text = this.currentMonster.alive ? Math.round(this.currentMonster.health) + ' HP' : 'DEAD';
+                if (Math.round(this.currentMonster.health) != healthBeforeDmg) {
+                var dpsText = this.dpsTextPool.getFirstExists(false);
+                  if (dpsText) {
+                    dpsText.text = this.player.dps;
+                    dpsText.reset(this.currentMonster.position.x, this.currentMonster.position.y);
+                    dpsText.alpha = 1;
+                    dpsText.tween.start();
+
+                  }
+                }
             }
         }
     },
@@ -249,7 +308,7 @@ game.state.add('play', {
 	onClickMonster: function(monster,pointer) {
     // apply click damage to monster
     this.currentMonster.damage(this.player.clickDmg);
-    this.monsterHealthText.text = this.currentMonster.alive ? this.currentMonster.health + ' HP' : 'DEAD';
+    this.monsterHealthText.text = this.currentMonster.alive ? Math.round(this.currentMonster.health) + ' HP' : 'DEAD';
 
     var dmgText = this.dmgTextPool.getFirstExists(false);
       if (dmgText) {
@@ -268,6 +327,7 @@ game.state.add('play', {
     // spawn a coin on the ground
     coin = this.coins.getFirstExists(false);
     coin.reset(this.game.world.centerX + this.game.rnd.integerInRange(-100, 100), this.game.world.centerY);
+    game.world.bringToTop(this.coins);
     coin.goldValue = Math.round(this.level * 1.33);
     this.game.time.events.add(Phaser.Timer.SECOND * 3, this.onClickCoin, this, coin);
 
@@ -308,6 +368,14 @@ game.state.add('play', {
       this.player.gold += coin.goldValue;
       // update UI
       this.playerGoldText.text = 'Gold: ' + this.player.gold;
+
+      var coinValue = this.coinValuePool.getFirstExists(false);
+        if (coinValue) {
+          coinValue.text = coin.goldValue;
+          coinValue.reset(coin.position.x, coin.position.y);
+          coinValue.alpha = 1;
+          coinValue.tween.start();
+        }
       // remove the coin
       coin.kill();
   },
