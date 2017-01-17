@@ -26,12 +26,12 @@ game.state.add('play', {
 
 
             // build panel for upgrades
-      var bmd = this.game.add.bitmapData(250, 250);
+      var bmd = this.game.add.bitmapData(250, 120);
       bmd.ctx.fillStyle = '#9a783d';
       bmd.ctx.strokeStyle = '#35371c';
       bmd.ctx.lineWidth = 12;
-      bmd.ctx.fillRect(0, 0, 250, 250);
-      bmd.ctx.strokeRect(0, 0, 250, 250);
+      bmd.ctx.fillRect(0, 0, 250, 120);
+      bmd.ctx.strokeRect(0, 0, 250, 120);
       this.game.cache.addBitmapData('upgradePanel', bmd);
 
       var buttonImage = this.game.add.bitmapData(476, 48);
@@ -42,6 +42,13 @@ game.state.add('play', {
       buttonImage.ctx.strokeRect(0, 0, 225, 48);
       this.game.cache.addBitmapData('button', buttonImage);
 
+      var status_bar_panel = this.game.add.bitmapData(790, 50);
+      status_bar_panel.ctx.fillStyle = '#9a783d';
+      status_bar_panel.ctx.strokeStyle = '#35371c';
+      status_bar_panel.ctx.lineWidth = 12;
+      status_bar_panel.ctx.fillRect(0, 0, 790, 50);
+      status_bar_panel.ctx.strokeRect(0, 0, 790, 50);
+      this.game.cache.addBitmapData('statusPanel', status_bar_panel);
 
   	},
     create: function() {
@@ -69,7 +76,7 @@ game.state.add('play', {
 
         // setup the world progression display
     this.levelUI = this.game.add.group();
-    this.levelUI.position.setTo(this.game.world.centerX, 30);
+    this.levelUI.position.setTo(this.game.world.width - 150, 30);
     this.levelText = this.levelUI.addChild(this.game.add.text(0, 0, 'Level: ' + this.level, {
         font: '24px Arial Black',
         fill: '#fff',
@@ -82,9 +89,10 @@ game.state.add('play', {
     }));
 
 
-    this.upgradePanel = this.game.add.image(10, 70, this.game.cache.getBitmapData('upgradePanel'));
+    this.upgradePanel = this.game.add.image(5, 425, this.game.cache.getBitmapData('upgradePanel'));
+    this.statusPanel = this.game.add.image(5, 547, this.game.cache.getBitmapData('statusPanel'));
     var upgradeButtons = this.upgradePanel.addChild(this.game.add.group());
-    upgradeButtons.position.setTo(8, 8);
+    upgradeButtons.position.setTo(8, 10);
 
     var upgradeButtonsData = [
         {icon: 'dagger', name: 'Attack', level: 0, cost: 5, purchaseHandler: function(button, player) {
@@ -161,7 +169,19 @@ game.state.add('play', {
 
 
 
-    this.playerGoldText = this.add.text(30, 30, 'Gold: ' + this.player.gold, {
+    this.playerGoldText = this.add.text(15, 557, 'Gold: ' + this.player.gold, {
+        font: '24px Arial Black',
+        fill: '#fff',
+        strokeThickness: 4
+    });
+
+    this.playerDmgText = this.add.text(130, 557, 'DMG: ' + this.player.clickDmg, {
+        font: '24px Arial Black',
+        fill: '#fff',
+        strokeThickness: 4
+    });
+
+    this.playerDpsText = this.add.text(245, 557, 'DPS: ' + this.player.dps, {
         font: '24px Arial Black',
         fill: '#fff',
         strokeThickness: 4
@@ -194,7 +214,7 @@ game.state.add('play', {
 		this.currentMonster.position.set(this.game.world.centerX, this.game.world.centerY);
 
     this.monsterInfoUI = this.game.add.group();
-    this.monsterInfoUI.position.setTo(this.game.world.centerX - 140, this.game.world.centerY + 150);
+    this.monsterInfoUI.position.setTo(this.game.world.centerX - 110, this.game.world.centerY + 140);
     this.monsterNameText = this.monsterInfoUI.addChild(this.game.add.text(0, 0, this.currentMonster.details.name, {
         font: '48px Arial Black',
         fill: '#fff',
@@ -302,10 +322,16 @@ game.state.add('play', {
     if (this.player.gold - getAdjustedCost() >= 0) {
         this.player.gold -= getAdjustedCost();
         this.playerGoldText.text = 'Gold: ' + this.player.gold;
+
         button.details.level++;
         button.text.text = button.details.name + ': ' + button.details.level;
         button.costText.text = 'Cost: ' + getAdjustedCost();
+
         button.details.purchaseHandler.call(this, button, this.player);
+
+        this.playerDmgText.text = 'DMG: ' + this.player.clickDmg;
+        this.playerDpsText.text = 'DPS: ' + this.player.dps;
+
     }
   }
 });
