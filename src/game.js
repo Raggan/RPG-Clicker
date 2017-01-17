@@ -67,6 +67,8 @@ game.state.add('play', {
         health: 100
     };
 
+
+
         // world progression
     this.level = 1;
     // how many monsters have we killed during this level
@@ -139,6 +141,29 @@ game.state.add('play', {
             text.kill();
         });
         this.dmgTextPool.add(dmgText);
+    }
+
+    this.monsterDmgTextPool = this.add.group();
+    var monsterDmgText;
+    for (var d=0; d<50; d++) {
+        monsterDmgText = this.add.text(0, 0, '1', {
+            font: '64px Arial Black',
+            fill: '#0101DF',
+            strokeThickness: 4
+        });
+        // start out not existing, so we don't draw it yet
+        monsterDmgText.exists = false;
+        monsterDmgText.tween = game.add.tween(monsterDmgText)
+            .to({
+                alpha: 0,
+                y: 700,
+                x: this.game.rnd.integerInRange(100, 700)
+            }, 2000, Phaser.Easing.Cubic.Out);
+
+        monsterDmgText.tween.onComplete.add(function(text, tween) {
+            text.kill();
+        });
+        this.monsterDmgTextPool.add(monsterDmgText);
     }
 
     this.dpsTextPool = this.add.group();
@@ -254,7 +279,7 @@ game.state.add('play', {
 
       // use the built in health component
       monster.health = monster.maxHealth = data.maxHealth;
-
+      monster.maxDmg = data.maxDmg;
       // hook into health and lifecycle events
       monster.events.onKilled.add(state.onKilledMonster, state);
       monster.events.onRevived.add(state.onRevivedMonster, state);
@@ -269,21 +294,21 @@ game.state.add('play', {
 		this.currentMonster.position.set(this.game.world.centerX, this.game.world.centerY);
 
     this.monsterInfoUI = this.game.add.group();
-    this.monsterInfoUI.position.setTo(this.game.world.centerX - 110, this.game.world.centerY + 140);
+    this.monsterInfoUI.position.setTo(this.game.world.centerX - 110, 20);
     this.monsterNameText = this.monsterInfoUI.addChild(this.game.add.text(0, 0, this.currentMonster.details.name, {
-        font: '48px Arial Black',
+        font: '24px Arial Black',
         fill: '#fff',
         strokeThickness: 4
     }));
-    this.monsterHealthText = this.monsterInfoUI.addChild(this.game.add.text(0, 60, this.currentMonster.health + ' HP', {
-        font: '32px Arial Black',
+    this.monsterHealthText = this.monsterInfoUI.addChild(this.game.add.text(20, 30, this.currentMonster.health + ' HP', {
+        font: '16px Arial Black',
         fill: '#ff0000',
         strokeThickness: 4
     }));
 
     // 100ms 10x a second
     this.dpsTimer = this.game.time.events.loop(100, this.onDPS, this);
-
+    this.dpsTimer = this.game.time.events.loop(1000, this.onMonsterDPS, this);
 
 	},
     render: function() {
@@ -308,6 +333,27 @@ game.state.add('play', {
 
                   }
                 }
+            }
+        }
+    },
+
+    onMonsterDPS: function() {
+        if (this.currentMonster.maxDmg > 0) {
+            //if (this.player.alive) {
+                var dmg = this.currentMonster.maxDmg;
+                var healthBeforeDmg = Math.round(this.player.health);
+                this.player.health = this.player.health - this.currentMonster.maxDmg;
+                // update the health text
+                this.playerHealthText.text = Math.round(this.player.health) + ' HP';
+                if (Math.round(this.player.health) != healthBeforeDmg) {
+                  var monsterDmgText = this.monsterDmgTextPool.getFirstExists(false);
+                    if (monsterDmgText) {
+                      monsterDmgText.text = this.currentMonster.maxDmg;
+                      monsterDmgText.reset(this.currentMonster.position.x, this.currentMonster.position.y);
+                      monsterDmgText.alpha = 1;
+                      monsterDmgText.tween.start();
+                    }
+              //  }
             }
         }
     },
@@ -344,6 +390,9 @@ game.state.add('play', {
         this.level++;
         this.levelKills = 0;
     }
+
+    this.player.health=100;
+    this.playerHealthText.text = Math.round(this.player.health) + ' HP';
 
     // pick a new monster
     this.currentMonster = this.monsters.getRandom();
