@@ -197,22 +197,22 @@ game.state.add('play', {
 
 
     var monsterData = [
-        {name: 'Aerocephal',        image: 'aerocephal',        maxHealth: 10},
-        {name: 'Arcana Drake',      image: 'arcana_drake',      maxHealth: 20},
-        {name: 'Aurum Drakueli',    image: 'aurum-drakueli',    maxHealth: 30},
-        {name: 'Bat',               image: 'bat',               maxHealth: 5},
-        {name: 'Daemarbora',        image: 'daemarbora',        maxHealth: 10},
-        {name: 'Deceleon',          image: 'deceleon',          maxHealth: 10},
-        {name: 'Demonic Essence',   image: 'demonic_essence',   maxHealth: 15},
-        {name: 'Dune Crawler',      image: 'dune_crawler',      maxHealth: 8},
-        {name: 'Green Slime',       image: 'green_slime',       maxHealth: 3},
-        {name: 'Nagaruda',          image: 'nagaruda',          maxHealth: 13},
-        {name: 'Rat',               image: 'rat',               maxHealth: 2},
-        {name: 'Scorpion',          image: 'scorpion',          maxHealth: 2},
-        {name: 'Skeleton',          image: 'skeleton',          maxHealth: 6},
-        {name: 'Snake',             image: 'snake',             maxHealth: 4},
-        {name: 'Spider',            image: 'spider',            maxHealth: 4},
-        {name: 'Stygian Lizard',    image: 'stygian_lizard',    maxHealth: 20}
+        {name: 'Aerocephal',        image: 'aerocephal',        maxHealth: 10, maxDmg: 2},
+        {name: 'Arcana Drake',      image: 'arcana_drake',      maxHealth: 20, maxDmg: 3},
+        {name: 'Aurum Drakueli',    image: 'aurum-drakueli',    maxHealth: 30, maxDmg: 4},
+        {name: 'Bat',               image: 'bat',               maxHealth: 5,  maxDmg: 1},
+        {name: 'Daemarbora',        image: 'daemarbora',        maxHealth: 10, maxDmg: 2},
+        {name: 'Deceleon',          image: 'deceleon',          maxHealth: 10, maxDmg: 2},
+        {name: 'Demonic Essence',   image: 'demonic_essence',   maxHealth: 15, maxDmg: 2},
+        {name: 'Dune Crawler',      image: 'dune_crawler',      maxHealth: 8,  maxDmg: 1},
+        {name: 'Green Slime',       image: 'green_slime',       maxHealth: 3,  maxDmg: 1},
+        {name: 'Nagaruda',          image: 'nagaruda',          maxHealth: 13, maxDmg: 2},
+        {name: 'Rat',               image: 'rat',               maxHealth: 2,  maxDmg: 1},
+        {name: 'Scorpion',          image: 'scorpion',          maxHealth: 2,  maxDmg: 1},
+        {name: 'Skeleton',          image: 'skeleton',          maxHealth: 6,  maxDmg: 1},
+        {name: 'Snake',             image: 'snake',             maxHealth: 4,  maxDmg: 1},
+        {name: 'Spider',            image: 'spider',            maxHealth: 4,  maxDmg: 1},
+        {name: 'Stygian Lizard',    image: 'stygian_lizard',    maxHealth: 20, maxDmg: 3}
     ];
 
 
