@@ -63,7 +63,8 @@ game.state.add('play', {
     this.player = {
         clickDmg: 1,
         gold: 0,
-        dps: 0
+        dps: 0,
+        health: 100
     };
 
         // world progression
@@ -230,6 +231,12 @@ game.state.add('play', {
     });
 
     this.playerDpsText = this.add.text(245, 557, 'DPS: ' + this.player.dps, {
+        font: '24px Arial Black',
+        fill: '#fff',
+        strokeThickness: 4
+    });
+
+    this.playerHealthText = this.add.text(360, 557, 'Health: ' + this.player.health, {
         font: '24px Arial Black',
         fill: '#fff',
         strokeThickness: 4
