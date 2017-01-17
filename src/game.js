@@ -20,7 +20,29 @@ game.state.add('play', {
   		this.game.load.image('stygian_lizard', 'assets/allacrost_enemy_sprites/stygian_lizard.png');
 
       this.game.load.image('gold_coin', 'assets/496_RPG_icons/I_GoldCoin.png');
+      this.game.load.image('dagger', 'assets/496_RPG_icons/W_Dagger002.png');
+      this.game.load.image('swordIcon1', 'assets/496_RPG_icons/S_Sword01.png');
   		this.game.load.image('forest', 'assets/Background/Forrest.png');
+
+
+            // build panel for upgrades
+      var bmd = this.game.add.bitmapData(250, 250);
+      bmd.ctx.fillStyle = '#9a783d';
+      bmd.ctx.strokeStyle = '#35371c';
+      bmd.ctx.lineWidth = 12;
+      bmd.ctx.fillRect(0, 0, 250, 250);
+      bmd.ctx.strokeRect(0, 0, 250, 250);
+      this.game.cache.addBitmapData('upgradePanel', bmd);
+
+      var buttonImage = this.game.add.bitmapData(476, 48);
+      buttonImage.ctx.fillStyle = '#e6dec7';
+      buttonImage.ctx.strokeStyle = '#35371c';
+      buttonImage.ctx.lineWidth = 4;
+      buttonImage.ctx.fillRect(0, 0, 225, 48);
+      buttonImage.ctx.strokeRect(0, 0, 225, 48);
+      this.game.cache.addBitmapData('button', buttonImage);
+
+
   	},
     create: function() {
 
@@ -29,6 +51,62 @@ game.state.add('play', {
 		var bg = state.game.add.tileSprite(0, 0, state.game.world.width,
 		    state.game.world.height, 'forest');
 		//bg.tileScale.setTo(4,4);
+
+    // the main player
+    this.player = {
+        clickDmg: 1,
+        gold: 0,
+        dps: 0
+    };
+
+        // world progression
+    this.level = 1;
+    // how many monsters have we killed during this level
+    this.levelKills = 0;
+    // how many monsters are required to advance a level
+    this.levelKillsRequired = 10;
+
+
+        // setup the world progression display
+    this.levelUI = this.game.add.group();
+    this.levelUI.position.setTo(this.game.world.centerX, 30);
+    this.levelText = this.levelUI.addChild(this.game.add.text(0, 0, 'Level: ' + this.level, {
+        font: '24px Arial Black',
+        fill: '#fff',
+        strokeThickness: 4
+    }));
+    this.levelKillsText = this.levelUI.addChild(this.game.add.text(0, 30, 'Kills: ' + this.levelKills + '/' + this.levelKillsRequired, {
+        font: '24px Arial Black',
+        fill: '#fff',
+        strokeThickness: 4
+    }));
+
+
+    this.upgradePanel = this.game.add.image(10, 70, this.game.cache.getBitmapData('upgradePanel'));
+    var upgradeButtons = this.upgradePanel.addChild(this.game.add.group());
+    upgradeButtons.position.setTo(8, 8);
+
+    var upgradeButtonsData = [
+        {icon: 'dagger', name: 'Attack', level: 0, cost: 5, purchaseHandler: function(button, player) {
+            player.clickDmg += 1;
+        }},
+        {icon: 'swordIcon1', name: 'Auto-Attack', level: 0, cost: 1, purchaseHandler: function(button, player) {
+            player.dps += 5;
+        }}
+    ];
+
+    var button;
+    upgradeButtonsData.forEach(function(buttonData, index) {
+        button = state.game.add.button(0, (50 * index), state.game.cache.getBitmapData('button'));
+        button.icon = button.addChild(state.game.add.image(6, 6, buttonData.icon));
+        button.text = button.addChild(state.game.add.text(42, 6, buttonData.name + ': ' + buttonData.level, {font: '16px Arial Black'}));
+        button.details = buttonData;
+        button.costText = button.addChild(state.game.add.text(42, 24, 'Cost: ' + buttonData.cost, {font: '16px Arial Black'}));
+        button.events.onInputDown.add(state.onUpgradeButtonClick, state);
+
+        upgradeButtons.addChild(button);
+    });
+
 
 
     this.dmgTextPool = this.add.group();
@@ -80,11 +158,7 @@ game.state.add('play', {
         {name: 'Stygian Lizard',    image: 'stygian_lizard',    maxHealth: 20}
     ];
 
-    // the main player
-    this.player = {
-        clickDmg: 1,
-        gold: 0
-    };
+
 
 
     this.playerGoldText = this.add.text(30, 30, 'Gold: ' + this.player.gold, {
@@ -120,7 +194,7 @@ game.state.add('play', {
 		this.currentMonster.position.set(this.game.world.centerX, this.game.world.centerY);
 
     this.monsterInfoUI = this.game.add.group();
-    this.monsterInfoUI.position.setTo(this.game.world.centerX - 150, this.game.world.centerY + 150);
+    this.monsterInfoUI.position.setTo(this.game.world.centerX - 140, this.game.world.centerY + 150);
     this.monsterNameText = this.monsterInfoUI.addChild(this.game.add.text(0, 0, this.currentMonster.details.name, {
         font: '48px Arial Black',
         fill: '#fff',
@@ -131,11 +205,26 @@ game.state.add('play', {
         fill: '#ff0000',
         strokeThickness: 4
     }));
+
+    // 100ms 10x a second
+    this.dpsTimer = this.game.time.events.loop(100, this.onDPS, this);
+
+
 	},
     render: function() {
         },
 
 
+    onDPS: function() {
+        if (this.player.dps > 0) {
+            if (this.currentMonster && this.currentMonster.alive) {
+                var dmg = this.player.dps / 10;
+                this.currentMonster.damage(dmg);
+                // update the health text
+                this.monsterHealthText.text = this.currentMonster.alive ? Math.round(this.currentMonster.health) + ' HP' : 'DEAD';
+            }
+        }
+    },
 
 	onClickMonster: function(monster,pointer) {
     // apply click damage to monster
@@ -153,22 +242,31 @@ game.state.add('play', {
 
   onKilledMonster: function(monster) {
     // move the monster off screen again
-    monster.position.set(2000, this.game.world.centerY);
-
-    // pick a new monster
-    this.currentMonster = this.monsters.getRandom();
-    // make sure they are fully healed
-    this.currentMonster.revive(this.currentMonster.maxHealth);
+    monster.position.set(1000, this.game.world.centerY);
 
     var coin;
     // spawn a coin on the ground
     coin = this.coins.getFirstExists(false);
     coin.reset(this.game.world.centerX + this.game.rnd.integerInRange(-100, 100), this.game.world.centerY);
-    coin.goldValue = 1;
+    coin.goldValue = Math.round(this.level * 1.33);
     this.game.time.events.add(Phaser.Timer.SECOND * 3, this.onClickCoin, this, coin);
-    if (!coin.alive) {
-    return;
-}
+
+    this.levelKills++;
+
+    if (this.levelKills >= this.levelKillsRequired) {
+        this.level++;
+        this.levelKills = 0;
+    }
+
+    // pick a new monster
+    this.currentMonster = this.monsters.getRandom();
+    // upgrade the monster based on level
+    this.currentMonster.maxHealth = Math.ceil(this.currentMonster.details.maxHealth + ((this.level - 1) * 10.6));
+    // make sure they are fully healed
+    this.currentMonster.revive(this.currentMonster.maxHealth);
+
+    this.levelText.text = 'Level: ' + this.level;
+    this.levelKillsText.text = 'Kills: ' + this.levelKills + '/' + this.levelKillsRequired;
 
   },
 
@@ -183,12 +281,32 @@ game.state.add('play', {
 
 
   onClickCoin: function(coin) {
+      if (!coin.alive) {
+      return;
+    }
       // give the player gold
       this.player.gold += coin.goldValue;
       // update UI
       this.playerGoldText.text = 'Gold: ' + this.player.gold;
       // remove the coin
       coin.kill();
+  },
+
+
+  onUpgradeButtonClick: function(button, pointer) {
+    // make this a function so that it updates after we buy
+    function getAdjustedCost() {
+        return Math.ceil(button.details.cost + (button.details.level * 1.46));
+    }
+
+    if (this.player.gold - getAdjustedCost() >= 0) {
+        this.player.gold -= getAdjustedCost();
+        this.playerGoldText.text = 'Gold: ' + this.player.gold;
+        button.details.level++;
+        button.text.text = button.details.name + ': ' + button.details.level;
+        button.costText.text = 'Cost: ' + getAdjustedCost();
+        button.details.purchaseHandler.call(this, button, this.player);
+    }
   }
 });
 
