@@ -97,10 +97,11 @@ game.state.add('play', {
     }));
 
 
-    this.upgradePanel = this.game.add.image(5, 25, this.game.cache.getBitmapData('upgradePanel'));
+    this.upgradePanel = this.game.add.image(5, this.game.world.centerY - 50, this.game.cache.getBitmapData('upgradePanel'));
+    //this.upgradePanel.anchor.setTo(0,0.5);
     this.statusPanel = this.game.add.image(5, 547, this.game.cache.getBitmapData('statusPanel'));
     var upgradeButtons = this.upgradePanel.addChild(this.game.add.group());
-    upgradeButtons.position.setTo(8, 10);
+    upgradeButtons.position.setTo(8 , 10);
 
     var upgradeButtonsData = [
         {icon: 'dagger', name: 'Attack', level: 0, cost: 5, purchaseHandler: function(button, player) {
@@ -302,23 +303,25 @@ game.state.add('play', {
 
 
 		this.currentMonster = this.monsters.getRandom();
-		this.currentMonster.position.set(this.game.world.centerX, this.game.world.centerY);
-
+		this.currentMonster.position.set(this.game.world.centerX, this.game.world.centerY + 50);
+    //this.currentMonster.anchor.setTo(0.5);
     this.monsterInfoUI = this.game.add.group();
-    this.monsterInfoUI.position.setTo(this.game.world.centerX - 110, 20);
+    this.monsterInfoUI.position.setTo(this.game.world.centerX, 175);
+    //this.monsterInfoUI.anchor.setTo(0.5,0.5);
     this.monsterNameText = this.monsterInfoUI.addChild(this.game.add.text(0, 0, this.currentMonster.details.name, {
-        font: '24px Arial Black',
+        font: '32px Arial Black',
         fill: '#fff',
         strokeThickness: 4,
         align: "center"
     }));
-    this.monsterHealthText = this.monsterInfoUI.addChild(this.game.add.text(20, 30, this.currentMonster.health + ' HP', {
-        font: '16px Arial Black',
+    this.monsterNameText.anchor.set(0.5);
+    this.monsterHealthText = this.monsterInfoUI.addChild(this.game.add.text(0, 30, this.currentMonster.health + ' HP', {
+        font: '24px Arial Black',
         fill: '#ff0000',
         strokeThickness: 4,
         align: "center"
     }));
-
+    this.monsterHealthText.anchor.set(0.5);
     // 100ms 10x a second
     this.dpsTimer = this.game.time.events.loop(1000, this.onDPS, this);
     this.monsterDpsTimer = this.game.time.events.loop(1000, this.onMonsterDPS, this);
