@@ -2,6 +2,9 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, '');
 
 game.state.add('play', {
     preload: function() {
+
+
+
       this.game.load.image('aerocephal', 'assets/allacrost_enemy_sprites/aerocephal.png');
   		this.game.load.image('arcana_drake', 'assets/allacrost_enemy_sprites/arcana_drake.png');
   		this.game.load.image('aurum-drakueli', 'assets/allacrost_enemy_sprites/aurum-drakueli.png');
@@ -54,7 +57,8 @@ game.state.add('play', {
     create: function() {
 
 		var state = this;
-
+    this.scale.pageAlignHorizontally = true;
+    this.scale.pageAlignVertically = true;
 		var bg = state.game.add.tileSprite(0, 0, state.game.world.width,
 		    state.game.world.height, 'forest');
 		//bg.tileScale.setTo(4,4);
@@ -317,7 +321,7 @@ game.state.add('play', {
 
     // 100ms 10x a second
     this.dpsTimer = this.game.time.events.loop(1000, this.onDPS, this);
-    this.dpsTimer = this.game.time.events.loop(1000, this.onMonsterDPS, this);
+    this.monsterDpsTimer = this.game.time.events.loop(1000, this.onMonsterDPS, this);
 
 	},
     render: function() {
@@ -349,10 +353,31 @@ game.state.add('play', {
     onMonsterDPS: function() {
         if (this.currentMonster.maxDmg > 0 && this.level > 1) {
             //if (this.player.alive) {
+
                 var dmg = this.currentMonster.maxDmg * (1 + this.level / 10) ;
                 var healthBeforeDmg = Math.round(this.player.health);
-                if (!this.player.health <= 0) {this.player.health = this.player.health - dmg;}
-                else {this.player.health = 100 ;this.level = this.level - 1 ; this.levelKills = 0}
+                if (this.player.health > 0) {this.player.health = this.player.health - dmg;}
+                if (this.player.health <= 0) {
+                  this.level--;
+                  this.levelKills = 0;
+                  this.currentMonster.position.set(1000, this.game.world.centerY);
+
+                  this.player.health=100;
+                  this.playerHealthText.text = 'HP: ' + Math.round(this.player.health);
+                  this.player.experience = this.player.experience - this.level * 1.25;
+                  this.playerXpText.text = 'XP: ' + Math.round(this.player.experience);
+                  // pick a new monster
+                  this.currentMonster = this.monsters.getRandom();
+                  // upgrade the monster based on level
+                  this.currentMonster.maxHealth = Math.ceil(this.currentMonster.details.maxHealth + ((this.level - 1) * 10.6));
+                  // make sure they are fully healed
+                  this.currentMonster.revive(this.currentMonster.maxHealth);
+
+                  this.levelText.text = 'Level: ' + this.level;
+                  this.levelKillsText.text = 'Kills: ' + this.levelKills + '/' + this.levelKillsRequired;
+
+
+                }
                 // update the health text
                 this.playerHealthText.text = 'HP: ' + Math.round(this.player.health);
 
