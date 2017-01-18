@@ -346,15 +346,16 @@ game.state.add('play', {
     onMonsterDPS: function() {
         if (this.currentMonster.maxDmg > 0) {
             //if (this.player.alive) {
-                var dmg = this.currentMonster.maxDmg;
+                var dmg = this.currentMonster.maxDmg * (1 + this.level / 10) ;
                 var healthBeforeDmg = Math.round(this.player.health);
-                this.player.health = this.player.health - this.currentMonster.maxDmg;
+                if (!this.player.health <= 0) {this.player.health = this.player.health - dmg;}
+                else {this.player.health = 100 ;this.level = this.level - 1 ; this.levelKills = 0}
                 // update the health text
                 this.playerHealthText.text = Math.round(this.player.health) + ' HP';
                 if (Math.round(this.player.health) != healthBeforeDmg) {
                   var monsterDmgText = this.monsterDmgTextPool.getFirstExists(false);
                     if (monsterDmgText) {
-                      monsterDmgText.text = this.currentMonster.maxDmg;
+                      monsterDmgText.text = dmg;
                       monsterDmgText.reset(this.currentMonster.position.x, this.currentMonster.position.y);
                       monsterDmgText.alpha = 1;
                       monsterDmgText.tween.start();
