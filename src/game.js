@@ -65,7 +65,7 @@ game.state.add('play', {
 
     // the main player
     this.player = {
-        clickDmg: 5,
+        clickDmg: 1,
         gold: 0,
         dps: 0,
         health: 100,
