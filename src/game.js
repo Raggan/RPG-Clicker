@@ -93,7 +93,7 @@ game.state.add('play', {
     }));
 
 
-    this.upgradePanel = this.game.add.image(5, 425, this.game.cache.getBitmapData('upgradePanel'));
+    this.upgradePanel = this.game.add.image(5, 25, this.game.cache.getBitmapData('upgradePanel'));
     this.statusPanel = this.game.add.image(5, 547, this.game.cache.getBitmapData('statusPanel'));
     var upgradeButtons = this.upgradePanel.addChild(this.game.add.group());
     upgradeButtons.position.setTo(8, 10);
@@ -117,6 +117,7 @@ game.state.add('play', {
         button.events.onInputDown.add(state.onUpgradeButtonClick, state);
 
         upgradeButtons.addChild(button);
+
     });
 
 
@@ -304,16 +305,18 @@ game.state.add('play', {
     this.monsterNameText = this.monsterInfoUI.addChild(this.game.add.text(0, 0, this.currentMonster.details.name, {
         font: '24px Arial Black',
         fill: '#fff',
-        strokeThickness: 4
+        strokeThickness: 4,
+        align: "center"
     }));
     this.monsterHealthText = this.monsterInfoUI.addChild(this.game.add.text(20, 30, this.currentMonster.health + ' HP', {
         font: '16px Arial Black',
         fill: '#ff0000',
-        strokeThickness: 4
+        strokeThickness: 4,
+        align: "center"
     }));
 
     // 100ms 10x a second
-    this.dpsTimer = this.game.time.events.loop(100, this.onDPS, this);
+    this.dpsTimer = this.game.time.events.loop(1000, this.onDPS, this);
     this.dpsTimer = this.game.time.events.loop(1000, this.onMonsterDPS, this);
 
 	},
@@ -324,12 +327,12 @@ game.state.add('play', {
     onDPS: function() {
         if (this.player.dps > 0) {
             if (this.currentMonster && this.currentMonster.alive) {
-                var dmg = this.player.dps / 10;
+                var dmg = this.player.dps;
                 var healthBeforeDmg = Math.round(this.currentMonster.health);
                 this.currentMonster.damage(dmg);
                 // update the health text
                 this.monsterHealthText.text = this.currentMonster.alive ? Math.round(this.currentMonster.health) + ' HP' : 'DEAD';
-                if (Math.round(this.currentMonster.health) != healthBeforeDmg) {
+
                 var dpsText = this.dpsTextPool.getFirstExists(false);
                   if (dpsText) {
                     dpsText.text = this.player.dps;
@@ -337,29 +340,29 @@ game.state.add('play', {
                     dpsText.alpha = 1;
                     dpsText.tween.start();
 
-                  }
+
                 }
             }
         }
     },
 
     onMonsterDPS: function() {
-        if (this.currentMonster.maxDmg > 0) {
+        if (this.currentMonster.maxDmg > 0 && this.level > 1) {
             //if (this.player.alive) {
                 var dmg = this.currentMonster.maxDmg * (1 + this.level / 10) ;
                 var healthBeforeDmg = Math.round(this.player.health);
                 if (!this.player.health <= 0) {this.player.health = this.player.health - dmg;}
                 else {this.player.health = 100 ;this.level = this.level - 1 ; this.levelKills = 0}
                 // update the health text
-                this.playerHealthText.text = Math.round(this.player.health) + ' HP';
-                if (Math.round(this.player.health) != healthBeforeDmg) {
+                this.playerHealthText.text = 'HP: ' + Math.round(this.player.health);
+
                   var monsterDmgText = this.monsterDmgTextPool.getFirstExists(false);
                     if (monsterDmgText) {
-                      monsterDmgText.text = dmg;
+                      monsterDmgText.text = Math.round(dmg);
                       monsterDmgText.reset(this.currentMonster.position.x, this.currentMonster.position.y);
                       monsterDmgText.alpha = 1;
                       monsterDmgText.tween.start();
-                    }
+
               //  }
             }
         }
@@ -399,9 +402,9 @@ game.state.add('play', {
     }
 
     this.player.health=100;
-    this.playerHealthText.text = Math.round(this.player.health) + ' HP';
+    this.playerHealthText.text = 'HP: ' + Math.round(this.player.health);
     this.player.experience = this.player.experience + this.level * 1.25;
-    this.playerXpText.text = Math.round(this.player.experience + 'XP')
+    this.playerXpText.text = 'XP: ' + Math.round(this.player.experience);
     // pick a new monster
     this.currentMonster = this.monsters.getRandom();
     // upgrade the monster based on level
