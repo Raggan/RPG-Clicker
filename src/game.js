@@ -64,7 +64,8 @@ game.state.add('play', {
         clickDmg: 1,
         gold: 0,
         dps: 0,
-        health: 100
+        health: 100,
+        experience: 0
     };
 
 
@@ -261,7 +262,12 @@ game.state.add('play', {
         strokeThickness: 4
     });
 
-    this.playerHealthText = this.add.text(360, 557, 'Health: ' + this.player.health, {
+    this.playerHealthText = this.add.text(360, 557, 'HP: ' + this.player.health, {
+        font: '24px Arial Black',
+        fill: '#fff',
+        strokeThickness: 4
+    });
+    this.playerXpText = this.add.text(475, 557, 'XP: ' + this.player.experience, {
         font: '24px Arial Black',
         fill: '#fff',
         strokeThickness: 4
@@ -393,7 +399,8 @@ game.state.add('play', {
 
     this.player.health=100;
     this.playerHealthText.text = Math.round(this.player.health) + ' HP';
-
+    this.player.experience = this.player.experience + this.level * 1.25;
+    this.playerXpText.text = Math.round(this.player.experience + 'XP')
     // pick a new monster
     this.currentMonster = this.monsters.getRandom();
     // upgrade the monster based on level
